@@ -184,7 +184,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             SLComposeViewController *twitter=[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter];
             [twitter addImage:processedImage];
-            twitter.completionHandler=^(TWTweetComposeViewControllerResult result){
+            twitter.completionHandler=^(SLComposeViewControllerResult result){
                 [self dismissViewControllerAnimated:YES completion:^{
                     [self dismissViewControllerAnimated:YES completion:nil];
                 }];
@@ -203,7 +203,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             SLComposeViewController *twitter=[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeFacebook];
             [twitter addImage:processedImage];
-            twitter.completionHandler=^(TWTweetComposeViewControllerResult result){
+            twitter.completionHandler=^(SLComposeViewControllerResult result){
                 [self dismissViewControllerAnimated:YES completion:^{
                     [self dismissViewControllerAnimated:YES completion:nil];
                 }];
