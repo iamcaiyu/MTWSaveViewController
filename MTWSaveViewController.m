@@ -8,12 +8,11 @@
 
 #import "MTWSaveViewController.h"
 #import <GADBannerView.h>
-#import "Header.h"
 #import <Twitter/Twitter.h>
 #import <FacebookSDK/FacebookSDK.h>
 #import "ALAssetsLibrary+CustomPhotoAlbum.h"
-#import "CAICreateThumbImage.h"
 #import "MGInstagram.h"
+#import "Header.h"
 
 @interface MTWSaveViewController () {
     IBOutlet __weak UIActivityIndicatorView *indicatorView;
@@ -25,8 +24,7 @@
     BOOL requestClose;
     BOOL requestOpenActionSheet;
     BOOL requestInstagram;
-    
-    BOOL firstDisplay;
+    BOOL hasDisplay;
 }
 
 @end
@@ -42,7 +40,7 @@
         displayAdview=NO;
         requestOpenActionSheet=NO;
         requestInstagram=NO;
-        firstDisplay=YES;
+        hasDisplay=NO;
     }
     return self;
 }
@@ -54,7 +52,7 @@
     if (!self.bought) {
         bannerView=[[GADBannerView alloc]initWithAdSize:kGADAdSizeMediumRectangle];
         bannerView.center=CGPointMake(kScreenWidth/2.0f, kScreenHeight/2.0f);
-        bannerView.adUnitID=kAdmobPublishID;
+        bannerView.adUnitID=self.admobPublishID;
         bannerView.rootViewController=self;
         bannerView.delegate=self;
         [self.view addSubview:bannerView];
@@ -62,7 +60,6 @@
         //request.testDevices = [NSArray arrayWithObjects:@"09f93dda5b568219e2fb957f52f21791", nil];
         [bannerView loadRequest:request];
     }
-    
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -74,8 +71,8 @@
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    if (firstDisplay) {
-        firstDisplay=NO;
+    if (!hasDisplay) {
+        hasDisplay=YES;
         UIActionSheet *actionSheet=[[UIActionSheet alloc]initWithTitle:@"Share" delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", @"ActionSheet Cancel") destructiveButtonTitle:nil otherButtonTitles:NSLocalizedString(@"Save to Photo Album", @"Save to Photo Album"), @"Instagram", @"Twitter", @"Facebook", nil];
         [actionSheet showInView:self.view];
     }
@@ -98,10 +95,8 @@
 
 - (void)processImage
 {
-    processedImage=[CAICreateThumbImage createThumbImage:self.sourceImage size:CGSizeMake(900.0f, 900.0f)];
-    if (!self.bought) {
-        sleep(3);
-    }
+    self.getFinalImage();
+    sleep(3);
 }
 
 #pragma mark UIActionSheet Delegate
@@ -201,6 +196,8 @@
     if (!FBSession.activeSession.isOpen) {
         [FBSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObject:@"publish_actions"] defaultAudience:FBSessionDefaultAudienceFriends allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
             if (!FBSession.activeSession.isOpen) {
+                stateLabel.hidden=NO;
+                indicatorView.hidden=NO;
                 stateLabel.text=@"Login Failed";
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                     sleep(2.0f);

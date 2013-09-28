@@ -10,9 +10,17 @@
 #import <GADBannerView.h>
 #import "MGInstagram.h"
 
+#define kMTWShareToAlbum @"album"
+#define kMTWShareToFacebook @"facebook"
+#define kMTWShareToTwitter @"twitter"
+#define kMTWShareToInstagram @"instagram"
+
+typedef UIImage* (^MTWImageProcessBlock)(void);
+
 @interface MTWSaveViewController : UIViewController<GADBannerViewDelegate, UIActionSheetDelegate, MGInstagramDelegate>
 
-@property (nonatomic, weak) UIImage *sourceImage;
+@property (nonatomic, strong) NSString *admobPublishID;
 @property BOOL bought;
+@property (nonatomic, copy) MTWImageProcessBlock getFinalImage;
 
 @end
