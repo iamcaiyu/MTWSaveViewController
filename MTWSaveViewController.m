@@ -9,9 +9,9 @@
 #import "MTWSaveViewController.h"
 #import <GADBannerView.h>
 #import <Twitter/Twitter.h>
-#import <FacebookSDK/FacebookSDK.h>
 #import "ALAssetsLibrary+CustomPhotoAlbum.h"
 #import "MGInstagram.h"
+#import <Social/Social.h>
 #import "Header.h"
 
 @interface MTWSaveViewController () {
@@ -41,6 +41,7 @@
         requestOpenActionSheet=NO;
         requestInstagram=NO;
         hasDisplay=NO;
+        _saveDelayTime=3.0f;
     }
     return self;
 }
@@ -95,8 +96,8 @@
 
 - (void)processImage
 {
-    self.getFinalImage();
-    sleep(3);
+    processedImage=self.getFinalImage();
+    sleep(self.saveDelayTime);
 }
 
 #pragma mark UIActionSheet Delegate
@@ -133,7 +134,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             stateLabel.text=@"Saving";
             ALAssetsLibrary *assetsLibrary=[[ALAssetsLibrary alloc]init];
-            [assetsLibrary saveImage:processedImage withOrientation:processedImage.imageOrientation toAlbum:@"Bokeh Camera" withCompletionBlock:^(NSError *error){
+            [assetsLibrary saveImage:processedImage withOrientation:processedImage.imageOrientation toAlbum:self.albumName withCompletionBlock:^(NSError *error){
                 if (error) {
                     stateLabel.text=@"Save Failed";
                 } else {
@@ -179,7 +180,7 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self processImage];
         dispatch_async(dispatch_get_main_queue(), ^{
-            TWTweetComposeViewController *twitter=[[TWTweetComposeViewController alloc]init];
+            SLComposeViewController *twitter=[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter];
             [twitter addImage:processedImage];
             twitter.completionHandler=^(TWTweetComposeViewControllerResult result){
                 [self dismissViewControllerAnimated:YES completion:^{
@@ -193,65 +194,21 @@
 
 - (void)shareToFacebook
 {
-    if (!FBSession.activeSession.isOpen) {
-        [FBSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObject:@"publish_actions"] defaultAudience:FBSessionDefaultAudienceFriends allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
-            if (!FBSession.activeSession.isOpen) {
-                stateLabel.hidden=NO;
-                indicatorView.hidden=NO;
-                stateLabel.text=@"Login Failed";
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    sleep(2.0f);
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self closeViewController];
-                    });
-                });
-            } else {
-                [self sendImageToFacebook];
-            }
-        }];
-    } else {
-        [self sendImageToFacebook];
-    }
-}
-
-- (void)sendImageToFacebook
-{
     stateLabel.hidden=NO;
     indicatorView.hidden=NO;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self processImage];
         dispatch_async(dispatch_get_main_queue(), ^{
-            stateLabel.text=@"Sending";
-            [self performPublishAction:^{
-                [FBRequestConnection startForUploadPhoto:processedImage completionHandler:^(FBRequestConnection *connection, id result, NSError *error){
-                    if (error) {
-                        stateLabel.text=@"Send Failed";
-                    } else {
-                        stateLabel.text=@"Send Success";
-                    }
-                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                        sleep(2.0f);
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [self closeViewController];
-                        });
-                    });
+            SLComposeViewController *twitter=[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeFacebook];
+            [twitter addImage:processedImage];
+            twitter.completionHandler=^(TWTweetComposeViewControllerResult result){
+                [self dismissViewControllerAnimated:YES completion:^{
+                    [self dismissViewControllerAnimated:YES completion:nil];
                 }];
-            }];
+            };
+            [self presentViewController:twitter animated:YES completion:nil];
         });
     });
-}
-
-- (void)performPublishAction:(void (^)(void)) action
-{
-    if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"]==NSNotFound) {
-        [FBSession.activeSession requestNewPublishPermissions:[NSArray arrayWithObject:@"publish_actions"] defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error){
-            if (!error) {
-                action();
-            }
-        }];
-    } else {
-        action();
-    }
 }
 
 - (void)adView:(GADBannerView *)view didFailToReceiveAdWithError:(GADRequestError *)error

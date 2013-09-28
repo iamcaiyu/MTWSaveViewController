@@ -4,7 +4,7 @@
 //
 //  Created by CaiYu on 13-8-30.
 //  Copyright (c) 2013年 Meituwan. All rights reserved.
-//
+//  Version 1.1
 
 #import <UIKit/UIKit.h>
 #import <GADBannerView.h>
@@ -22,5 +22,7 @@ typedef UIImage* (^MTWImageProcessBlock)(void);
 @property (nonatomic, strong) NSString *admobPublishID;
 @property BOOL bought;
 @property (nonatomic, copy) MTWImageProcessBlock getFinalImage;
+@property (nonatomic) CGFloat saveDelayTime;
+@property (nonatomic, strong) NSString *albumName;
 
 @end
