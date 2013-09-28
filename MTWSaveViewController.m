@@ -12,7 +12,9 @@
 #import "ALAssetsLibrary+CustomPhotoAlbum.h"
 #import "MGInstagram.h"
 #import <Social/Social.h>
-#import "Header.h"
+
+#define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
+#define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 
 @interface MTWSaveViewController () {
     IBOutlet __weak UIActivityIndicatorView *indicatorView;
